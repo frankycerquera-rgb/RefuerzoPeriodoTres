@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Misión recuperación 8°</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@600;700&family=Nunito+Sans:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+/* VOICE: claro y retador, como un reto de laboratorio para jóvenes de 8°.
+   IDEA: una "orden de trabajo" de taller electrónico: cada pareja recibe su propia ficha.
+   PICTURE: la placa Arduino dibujada con SUS pines resaltados (servo, LED, Trig, Echo).
+   COLOUR and TYPE: teal Arduino dominante, blanco, acento naranja del cable de señal del servo. Chakra Petch + Nunito Sans.
+   LAYOUT: ficha arriba, niveles como estaciones que se desbloquean, panel docente al final. */
+:root{color-scheme:light dark;--bg:light-dark(#ffffff,#0a1f22);--ink:light-dark(#0b2a2e,#e6f4f4);--soft:light-dark(#4b6468,#9fbcbf);--teal:#00878f;--tealbg:light-dark(#e3f4f4,#0f3236);--line:light-dark(#cfe3e4,#1d4a4f);--acc:#ff8a1f;--card:light-dark(#ffffff,#0f2a2e);--ok:#0b8a4a;--bad:#c0392b}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 "Nunito Sans",system-ui,sans-serif;overflow-x:clip}
+h1,h2,h3{font-family:"Chakra Petch",sans-serif;line-height:1.08;text-wrap:balance;margin:0 0 .4em}
+h1{font-size:clamp(32px,5vw,48px)}h2{font-size:clamp(24px,3.2vw,32px)}h3{font-size:19px}
+.band{padding:clamp(24px,4vw,56px) max(5vw,16px)}.wrap{max-width:1100px;margin:auto}
+.top{background:var(--teal);color:#fff}.top p{max-width:62ch;opacity:.95}
+form.start{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-top:18px;align-items:end}
+label{font-weight:700;font-size:14px;display:block;margin-bottom:4px}
+input,select{width:100%;font:16px inherit;padding:12px;border-radius:10px;border:2px solid var(--line);background:var(--card);color:var(--ink)}
+.top input,.top select{border-color:#7fc9cd}
+button{font:700 16px "Nunito Sans",sans-serif;min-height:44px;padding:10px 18px;border-radius:10px;border:0;background:var(--acc);color:#1b1000;cursor:pointer}
+button.ghost{background:transparent;color:var(--teal);border:2px solid var(--teal)}
+button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
+button:disabled{opacity:.45;cursor:not-allowed}
+.ficha{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:24px;align-items:center}
+.board{background:var(--tealbg);border-radius:16px;padding:12px}
+.board svg{width:100%;height:auto;display:block}
+.code{font-family:"Chakra Petch",sans-serif;font-size:28px;color:var(--acc);letter-spacing:.04em}
+table{border-collapse:collapse;width:100%}td,th{padding:8px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}th{font-size:14px;color:var(--soft)}
+.tabs{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 18px}
+.tabs button{background:var(--tealbg);color:var(--ink);border:2px solid transparent}
+.tabs button[aria-selected=true]{border-color:var(--teal);background:var(--card)}
+.lvl{background:var(--card);border:2px solid var(--line);border-radius:16px;padding:clamp(16px,3vw,28px)}
+.reto{background:var(--tealbg);border-left:6px solid var(--acc);padding:12px 16px;border-radius:10px;margin:12px 0;font-size:17px}
+.scroll{overflow-x:auto}pre{background:#0b2226;color:#d9f2f2;padding:14px;border-radius:10px;overflow-x:auto;font-size:14px;line-height:1.45;margin:0}
+.codebox{position:relative;margin:10px 0}.codebox button{position:absolute;top:8px;right:8px;min-height:34px;padding:4px 12px;font-size:14px}
+ol li{margin-bottom:6px}.ex{font-style:italic;color:var(--soft)}
+.quiz{border-top:2px dashed var(--line);margin-top:20px;padding-top:16px}
+.q{margin:12px 0}.opts{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
+.opts button{background:var(--tealbg);color:var(--ink);font-weight:600;border:2px solid var(--line)}
+.opts button.sel{border-color:var(--teal);background:var(--card)}
+.opts button.ok{border-color:var(--ok)}.opts button.no{border-color:var(--bad)}
+.msg{font-weight:800;margin-top:10px}.stars{color:var(--acc);font-size:22px;letter-spacing:2px}
+.lock{color:var(--soft);padding:24px;text-align:center}
+.check li{list-style:none;margin:6px 0}.check{padding:0}
+details{margin-top:28px;border:2px solid var(--line);border-radius:14px;padding:12px 16px}summary{cursor:pointer;font-weight:800;min-height:32px}
+.hidden{display:none}.small{font-size:14px;color:var(--soft)}
+@media(max-width:700px){.ficha{grid-template-columns:1fr}}
+@media(prefers-reduced-motion:no-preference){.lvl{animation:in .35s ease}@keyframes in{from{opacity:0;transform:translateY(8px)}}}
+</style>
+</head>
+<body>
+<header class="band top"><div class="wrap">
+  <h1>Misión de recuperación · Tecnología 8°</h1>
+  <p>Jóvenes, cada persona o pareja recibe una misión distinta: otro invento, otros pines y otros valores. Escriban sus nombres tal como aparecen en Classroom, elijan su grupo y su ruta. Para saber su ruta, revisen en Classroom cuántas actividades de Tecnología tienen en <b>1/4</b> (eso es Bajo): entre más notas deban, más larga y exigente es la misión. Si trabajan en pareja, los dos hacen la ruta más alta de los dos. Tiempos: ruta 1, 45 min; ruta 2, 85 min; ruta 3, 100 min; ruta 4, 110 min con sustentación. Al terminar, levanten la mano: el profe los califica ahí mismo. Trabajo individual o en parejas (máximo 2), en Tinkercad, sin celular.</p>
+  <form class="start" id="start">
+    <div><label for="n1">Nombre y apellido</label><input id="n1" required autocomplete="off"></div>
+    <div><label for="n2">Compañero (opcional)</label><input id="n2" autocomplete="off"></div>
+    <div><label for="gr">Mi grupo</label><select id="gr" required><option value="">Elige…</option><option value="82">8-2</option><option value="83">8-3</option><option value="84">8-4</option></select></div>
+    <div><label for="ru">Mi ruta (según mis notas en Bajo)</label><select id="ru" required><option value="">Elige…</option><option value="1">Ruta 1 · tengo 0 o 1 nota en 1/4</option><option value="2">Ruta 2 · tengo 2 notas en 1/4</option><option value="3">Ruta 3 · tengo 3 notas en 1/4</option><option value="4">Ruta 4 · tengo 4 o más notas en 1/4 (con sustentación)</option></select></div>
+    <div><button type="submit">Generar mi misión</button></div>
+  </form>
+</div></header>
+
+<main id="app" class="hidden">
+  <section class="band"><div class="wrap ficha">
+    <div>
+      <p class="small">Código de misión (escríbanlo arriba en su documento)</p>
+      <div class="code" id="mcode"></div><p id="mroute" style="font-weight:800;margin:.2em 0 .6em"></p>
+      <h2 id="mtitle"></h2>
+      <div id="msum"></div>
+    </div>
+    <div class="board" id="board" aria-label="Placa Arduino con los pines de tu misión"></div>
+  </div>
+  <div class="wrap reto" style="margin-top:18px"><b>Cómo trabajar, en 3 pasos:</b>
+    <ol style="margin:.4em 0 0"><li>Abran un Google Docs y en la primera línea escriban: <b id="mline"></b></li>
+    <li>Hagan cada nivel en Tinkercad y peguen en el documento las capturas y respuestas que pide la página.</li>
+    <li>Al terminar, levanten la mano: el profe revisa en su pantalla. Luego cada uno sube el documento a Classroom.</li></ol></div>
+  </section>
+
+  <section class="band" style="padding-top:0"><div class="wrap">
+    <div class="tabs" role="tablist" id="tabs"></div>
+    <div id="lvl"></div>
+  </div></section>
+</main>
+
+<section class="band" style="padding-top:0"><div class="wrap">
+  <details id="teacher"><summary>Panel del docente: verificar una misión</summary>
+    <p class="small">Escriba los nombres como los escribió el estudiante, su grupo y su ruta, y vea la misión que le correspondía y las respuestas esperadas.</p>
+    <form class="start" id="tform" style="margin-top:8px">
+      <div><label for="t1">Nombre 1</label><input id="t1" autocomplete="off"></div>
+      <div><label for="t2">Nombre 2</label><input id="t2" autocomplete="off"></div>
+      <div><label for="tg">Grupo</label><select id="tg"><option value="82">8-2</option><option value="83">8-3</option><option value="84">8-4</option></select></div>
+      <div><label for="tr">Ruta</label><select id="tr"><option value="1">Ruta 1</option><option value="2">Ruta 2</option><option value="3">Ruta 3</option><option value="4">Ruta 4</option></select></div>
+      <div><button type="submit" class="ghost">Verificar</button></div>
+    </form>
+    <div id="tout" style="margin-top:14px"></div>
+    <div id="grade" style="margin-top:14px"></div>
+    <h3 style="margin-top:24px">Lista de notas de recuperación</h3>
+    <p class="small" id="lsave">Buscando el guardado en la nube…</p>
+    <div class="scroll"><table class="stack" id="ltab"></table></div>
+    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px"><button type="button" id="lcopy">Copiar para el Calificador</button><button type="button" class="ghost" id="lclear">Borrar lista</button><span id="lmsg" class="small" style="align-self:center"></span></div>
+  </details>
+  <p class="small" style="margin-top:18px">Prof. Franky Cerquera · Colegio Loyola para la Ciencia y la Innovación · Período III</p>
+</div></section>
+
+<script>
+{
+const $=s=>document.querySelector(s);
+const norm=s=>s.normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/[^a-z ]/g,'').replace(/\s+/g,' ').trim();
+function hash(str){let h1=0xdeadbeef,h2=0x41c6ce57;for(let i=0;i<str.length;i++){const c=str.charCodeAt(i);h1=Math.imul(h1^c,2654435761);h2=Math.imul(h2^c,1597334677)}h1=Math.imul(h1^(h1>>>16),2246822507)^Math.imul(h2^(h2>>>13),3266489909);h2=Math.imul(h2^(h2>>>16),2246822507)^Math.imul(h1^(h1>>>13),3266489909);return 4294967296*(2097151&h2)+(h1>>>0)}
+function rng(seed){let a=seed>>>0;return()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+const pick=(r,a)=>a[Math.floor(r()*a.length)];
+const shuffle=(r,a)=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(r()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+
+const SIT=[
+ {v:'temperatura',u:'°C',op:'>',k:30,on:35,off:25,f:'Si la temperatura del salón pasa de 30 °C, el LED avisa que hay que encender el ventilador.'},
+ {v:'luz',u:'',op:'<',k:40,on:20,off:70,f:'Si la luz del pasillo baja de 40, el LED se enciende como lámpara.'},
+ {v:'nivelAgua',u:'cm',op:'<',k:10,on:5,off:18,f:'Si el agua del tanque baja de 10 cm, el LED avisa que hay que llenarlo.'},
+ {v:'ruido',u:'dB',op:'>',k:70,on:85,off:50,f:'Si el ruido del salón pasa de 70 dB, el LED pide silencio.'},
+ {v:'personas',u:'',op:'>=',k:25,on:30,off:12,f:'Si en el aula hay 25 personas o más, el LED avisa que está llena.'},
+ {v:'humedad',u:'%',op:'<',k:35,on:20,off:60,f:'Si la humedad de la matera baja de 35 %, el LED avisa que hay que regarla.'},
+ {v:'velocidad',u:'km/h',op:'>',k:30,on:45,off:20,f:'Si un carro pasa a más de 30 km/h frente al colegio, el LED avisa el exceso.'},
+ {v:'bateria',u:'%',op:'<=',k:20,on:15,off:80,f:'Si la batería queda en 20 % o menos, el LED avisa que hay que cargarla.'}];
+const INV=['una talanquera de parqueadero','una caneca que abre la tapa sola','un dispensador de gel antibacterial','un comedero automático para mascotas','la puerta automática de la biblioteca','un radar que levanta una bandera de alerta','una alarma que mueve una campana en la puerta del laboratorio','la barrera de la portería del colegio','un dispensador de agua sin contacto','un letrero de «silencio» que se levanta en la biblioteca'];
+const AQ=[
+ 'En la prueba con el objeto exactamente a tu LIMITE, ¿se activó el invento? ¿Por qué? ¿Qué cambiarías en la condición para que sí se active?',
+ '¿La lectura del monitor serie coincidió con la distancia real del objeto? ¿Por qué un sensor ultrasónico no es perfecto?',
+ 'Si tu invento se instalara de verdad en el colegio, ¿qué cambio concreto le harías al código o al montaje? Explica por qué.',
+ 'Intercambia en el código los pines de Trig y Echo y simula. ¿Qué pasa y por qué?',
+ 'Explica con tus palabras qué hace la línea «return duracion * 0.0343 / 2;» y por qué se divide entre 2.',
+ 'Cambia el delay final del loop a 2000 ms. ¿Qué notas en la reacción del invento? ¿Qué valor dejarías y por qué?',
+ '¿Qué tendrías que cambiar en el código si tu invento debiera activarse cuando el objeto está LEJOS y no cerca?',
+ 'Quita la resistencia del LED en Tinkercad y simula. ¿Qué te muestra el simulador y qué pasaría con un LED real?'];
+
+const SQ=['Señala en tu código la línea que decide si el invento se activa y explícala.','¿Por qué el servo va en el pin que usaste y qué pasaría si lo cambias de pin solo en el montaje?','¿Qué significa el número 0.0343 en la función medirDistancia?','¿Qué es PWM y cómo lo usa el servo de tu invento?','Explica la diferencia entre if, else if y else con tu propio código.','¿Qué pasaría si el LIMITE fuera 0? Predícelo y luego pruébalo.'];
+const LIVE=['cambiar el LIMITE a otro valor que diga el profe y predecir qué pasa antes de simular','invertir el comportamiento del LED (que haga lo contrario) sin ayuda','hacer que el servo vuelva a reposo más lento, en dos pasos de ángulo','agregar un mensaje distinto en el monitor serie para cada zona'];
+function mission(a,b,ru,gr){ru=+ru||1;gr=String(gr||'83');
+  const names=[norm(a),norm(b||'')].filter(Boolean).sort();
+  const key=names.join('|'); const seed=hash('loyola|'+gr+'|'+ru+'|'+key); const r=rng(seed);
+  const code='M-'+(seed%2176782336).toString(36).toUpperCase().padStart(6,'0');
+  const s=pick(r,SIT);
+  const servo=pick(r,[3,5,6,9,10,11]);
+  const free=shuffle(r,[2,4,7,8,12,13].concat([3,5,6,9,10,11].filter(p=>p!==servo)));
+  const led=free[0],trig=free[1],echo=free[2];
+  const angs=shuffle(r,[0,30,45,60,120,135,150,180]).slice(0,3);
+  const dly=pick(r,[500,1500,2000,2500]);
+  const inv=pick(r,INV); const lim=pick(r,[10,12,15,18,25,30,35]);
+  const act=pick(r,[45,60,120,150,180]); const rest=pick(r,[0,10,20]);
+  const ledInv=r()<.5; const aq=shuffle(r,AQ).slice(0,3);
+  const used=[servo,led,trig,echo]; const led2=[2,4,7,8,12,13,3,5,6,10,11,9].find(p=>!used.includes(p));
+  const band=pick(r,[5,8,10]); const sq=shuffle(r,SQ).slice(0,3); const live=pick(r,LIVE);
+  return {key,code:code+'-'+gr+'-R'+ru,ru,gr,s,servo,led,trig,echo,angs,dly,inv,lim,act,rest,ledInv,aq,seed,led2,band,sq,live};
+}
+const pw=a=>(1+a/180).toFixed(2).replace('.',',');
+const litAt=(s,x)=>({'>':x>s.k,'<':x<s.k,'>=':x>=s.k,'<=':x<=s.k})[s.op];
+
+function boardSVG(m){
+  const pins=[13,12,11,10,9,8,7,6,5,4,3,2];
+  const role={};role[m.servo]=['Servo','#ff8a1f'];role[m.led]=['LED','#e8c547'];role[m.trig]=['Trig','#4fc3f7'];role[m.echo]=['Echo','#b39ddb'];
+  const x0=70,dx=34;
+  const ps=pins.map((p,i)=>{const x=x0+i*dx,R=role[p];return `<rect x="${x-11}" y="40" width="22" height="22" rx="3" fill="${R?R[1]:'#0e4f54'}" stroke="#fff" stroke-width="${R?2:0}"/><text x="${x}" y="80" fill="#e6f4f4" font-size="12" text-anchor="middle" font-family="Chakra Petch">${[3,5,6,9,10,11].includes(p)?'~':''}${p}</text>`+(R?`<line x1="${x}" y1="40" x2="${x}" y2="14" stroke="${R[1]}" stroke-width="4" stroke-linecap="round"/><text x="${x}" y="10" fill="${R[1]}" font-size="12" font-weight="700" text-anchor="middle" font-family="Chakra Petch">${R[0]}</text>`:'')}).join('');
+  return `<svg viewBox="0 0 500 250" role="img"><rect x="20" y="26" width="460" height="210" rx="14" fill="#00878f"/><rect x="20" y="26" width="460" height="210" rx="14" fill="none" stroke="#005f66" stroke-width="4"/>${ps}
+  <rect x="300" y="120" width="130" height="64" rx="6" fill="#0b2226"/><text x="365" y="157" fill="#e6f4f4" font-size="15" text-anchor="middle" font-family="Chakra Petch">ATmega328P</text>
+  <rect x="40" y="110" width="64" height="44" rx="4" fill="#b8c7c9"/><text x="72" y="176" fill="#e6f4f4" font-size="11" text-anchor="middle">USB</text>
+  <text x="140" y="140" fill="#fff" font-size="26" font-family="Chakra Petch" font-weight="700">UNO</text>
+  <text x="140" y="214" fill="#d0eef0" font-size="13" font-family="Nunito Sans">5V y GND en el lado de alimentación</text></svg>`;
+}
+function summary(m){return `<table><tr><th>Nivel 1</th><td>Variable <b>${m.s.v}</b> · LED en el pin <b>${m.led}</b></td></tr><tr><th>Nivel 2</th><td>Servo en el pin <b>${m.servo}</b> · ángulos <b>${m.angs.join('°, ')}°</b> · espera <b>${m.dly} ms</b></td></tr><tr><th>Nivel 3</th><td>${m.inv} · LIMITE <b>${m.lim} cm</b> · Trig <b>${m.trig}</b>, Echo <b>${m.echo}</b></td></tr></table>`}
+
+const cb=(c,id)=>`<div class="codebox"><pre id="${id}">${c.replace(/</g,'&lt;')}</pre><button type="button" class="ghost cp" data-t="${id}">Copiar</button></div>`;
+const C1=`const int PIN_LED = 13;\nint valor = 0;\n\nvoid setup() {\n  pinMode(PIN_LED, OUTPUT);\n  Serial.begin(9600);\n}\n\nvoid loop() {\n  if (valor > 50) {\n    digitalWrite(PIN_LED, HIGH);\n    Serial.println("Condición verdadera: LED encendido");\n  } else {\n    digitalWrite(PIN_LED, LOW);\n    Serial.println("Condición falsa: LED apagado");\n  }\n  delay(1000);\n}`;
+const C2=`#include <Servo.h>\nServo motor;\n\nvoid setup() {\n  motor.attach(9);\n}\n\nvoid loop() {\n  motor.write(0);   delay(1000);\n  motor.write(90);  delay(1000);\n  motor.write(180); delay(1000);\n}`;
+const C3=`#include <Servo.h>\nServo motor;\n\nconst int PIN_TRIG = 7;\nconst int PIN_ECHO = 6;\nconst int PIN_LED = 13;\nconst int PIN_SERVO = 9;\nconst int LIMITE = 20;   // cm\n\nlong medirDistancia() {\n  digitalWrite(PIN_TRIG, LOW);\n  delayMicroseconds(2);\n  digitalWrite(PIN_TRIG, HIGH);\n  delayMicroseconds(10);\n  digitalWrite(PIN_TRIG, LOW);\n  long duracion = pulseIn(PIN_ECHO, HIGH);\n  return duracion * 0.0343 / 2;\n}\n\nvoid setup() {\n  pinMode(PIN_TRIG, OUTPUT);\n  pinMode(PIN_ECHO, INPUT);\n  pinMode(PIN_LED, OUTPUT);\n  motor.attach(PIN_SERVO);\n  motor.write(0);\n  Serial.begin(9600);\n}\n\nvoid loop() {\n  long distancia = medirDistancia();\n  Serial.print("Distancia: ");\n  Serial.print(distancia);\n  Serial.println(" cm");\n  if (distancia < LIMITE) {\n    motor.write(90);\n    digitalWrite(PIN_LED, HIGH);\n  } else {\n    motor.write(0);\n    digitalWrite(PIN_LED, LOW);\n  }\n  delay(300);\n}`;
+
+function quizzes(m){
+  const s=m.s, eq=litAt(s,s.k), a=m.angs[1];
+  return [
+   [{q:`Con tu condición «${s.v} ${s.op} ${s.k}», si ${s.v} = ${s.on}, el LED…`,o:['se enciende','se apaga'],c:0},
+    {q:`Y si ${s.v} vale exactamente ${s.k}, el LED…`,o:['se enciende','se apaga'],c:eq?0:1},
+    {q:'Cuando la condición del if es falsa, el Arduino ejecuta…',o:['el bloque else','el bloque if','nada, se detiene'],c:0}],
+   [{q:'En TU misión, el cable naranja (señal) del servo va al pin…',o:[...new Set([m.servo,9,m.led,11])].map(String),c:0},
+    {q:`Ancho aproximado del pulso para ${a}°`,o:[pw(a)+' ms',pw((a+90)%180)+' ms','20 ms'],c:0},
+    {q:'La señal PWM del servo se repite cada…',o:['20 ms','1 segundo','2 ms'],c:0}],
+   [{q:`Con LIMITE = ${m.lim} y el objeto a ${m.lim-5} cm, el servo va a…`,o:[m.act+'°',m.rest+'°','no se mueve'],c:0},
+    {q:'En TU misión, el pin Echo del sensor va al pin…',o:[...new Set([m.echo,m.trig,6])].map(String),c:0},
+    {q:'En TU invento, cuando no hay nada cerca, el LED está…',o:['encendido','apagado'],c:m.ledInv?0:1}]
+  ];
+}
+
+function levels(m){
+  const s=m.s;
+  return [
+`<h2>Nivel 1 · La decisión: if-else con LED</h2><p class="small">20 minutos · recupera: Actividad inicial if-else y Laboratorio if-else</p>
+<div class="reto"><b>Tu situación:</b> ${s.f}</div>
+<ol><li>Monta en Tinkercad: Arduino Uno, 1 LED y 1 resistencia de 220 Ω. La resistencia va a la pata positiva (la larga) del LED. <b>Tu LED va en el pin ${m.led}</b>.</li>
+<li>Copia el código base y <b>adáptalo</b>: cambia el pin, cambia <code>valor</code> por <code>${s.v}</code> y escribe tu condición <code>${s.v} ${s.op} ${s.k}</code>. Cambia también los mensajes del monitor serie a tu situación.</li>
+<li>Simula con <code>${s.v} = ${s.on}</code>. <b>Captura 1:</b> circuito, código y monitor serie.</li>
+<li>Simula con <code>${s.v} = ${s.off}</code>. <b>Captura 2.</b></li></ol>
+${cb(C1,'c1')}
+<h3>Preguntas para tu documento</h3><ol><li>Explica tu condición con tus palabras y di qué pasa con ${s.v} = ${s.k}. Pruébalo.</li><li>¿Qué cambiaste del código base y por qué?</li><li>Inventa otra situación de tu casa o del colegio que se resuelva con un if-else. Escribe solo la condición.</li></ol>
+<p class="ex">Ejemplo de cómo responder la 1 (es de otra situación, no la copies): «El if pregunta si la luz es menor que 40; con luz = 40 el LED queda apagado porque 40 no es menor que 40».</p>`,
+`<h2>Nivel 2 · El movimiento: servomotor y PWM</h2><p class="small">25 minutos · recupera: Trabajo autónomo del microservomotor e Introducción al PWM</p>
+<div class="reto"><b>Tu reto:</b> el servo debe ir a <b>${m.angs.join('°, luego ')}°</b>, esperando <b>${m.dly} ms</b> en cada posición. <b>Tu servo va en el pin ${m.servo}</b>.</div>
+<ol><li>Agrega al circuito 1 microservomotor: naranja al pin ${m.servo}, rojo a 5V y café a GND.</li>
+<li>Adapta el código base: el pin de <code>attach</code>, los 3 ángulos y los delays.</li>
+<li><b>Captura 3:</b> el servo en tu segundo ángulo (${m.angs[1]}°). <b>Captura 4:</b> tu código.</li></ol>
+<p>El Arduino mueve el servo con PWM: una señal que se repite cada 20 ms. Lo que cambia es cuánto dura el pulso en alto; en un servo estándar va de 1 ms (0°) a 2 ms (180°), aproximadamente.</p>
+${cb(C2,'c2')}
+<h3>Para tu documento</h3><ol><li>Copia y llena esta tabla con TUS ángulos: Ángulo | Ancho aproximado del pulso | Para qué lo usarías en un invento.</li><li>Explica qué es PWM como si se lo contaras a un estudiante de 6°.</li><li>¿Qué pasa si quitas los delay? Pruébalo y cuéntalo.</li></ol>`,
+`<h2>Nivel 3 · Tu invento: sensor + Arduino + servo + LED</h2><p class="small">40 minutos · recupera: Conociendo los inventos y las entregas de la maqueta</p>
+<div class="reto"><b>Tu invento:</b> ${m.inv}. Cuando algo esté a menos de <b>${m.lim} cm</b>, el servo pasa de <b>${m.rest}°</b> a <b>${m.act}°</b>. El LED ${m.ledInv?'está <b>encendido en reposo</b> y se <b>apaga</b> cuando el invento se activa':'está <b>apagado en reposo</b> y se <b>enciende</b> cuando el invento se activa'}.</div>
+<ol><li>Agrega el sensor ultrasónico de 4 pines: VCC a 5V, GND a GND, <b>Trig al pin ${m.trig}</b> y <b>Echo al pin ${m.echo}</b>.</li>
+<li>Adapta el código base: los 4 pines, el LIMITE, los ángulos y el comportamiento del LED.</li>
+<li>Simula moviendo el objeto a <b>${m.lim-5} cm</b>, <b>${m.lim} cm</b> y <b>${m.lim+10} cm</b>. <b>Captura 5:</b> el invento activado.</li>
+<li>Copia y llena la tabla: Distancia del objeto | Lectura del monitor serie | ¿Se movió el servo? | ¿LED encendido?</li>
+<li>Escribe la cadena de tu invento en 4 pasos: qué detecta el sensor, qué condición revisa el código, qué hacen el servo y el LED, y para qué le sirve a quien lo usa.</li></ol>
+${cb(C3,'c3')}`,
+`<h2>Análisis final</h2><p class="small">15 minutos · solo ruta 3</p>
+<div class="reto">Responde en tu documento estas 3 preguntas. Son las de tu misión: otra pareja tiene otras.</div>
+<ol>${m.aq.map(q=>`<li>${q}</li>`).join('')}</ol>
+`];
+}
+
+function plan(m){
+  const L=levels(m), Q=['Nivel 1','Nivel 2','Nivel 3','Análisis'];
+  const extra=`<h2>Reto extra · Zona de precaución</h2><p class="small">20 minutos · solo ruta 4</p>
+<div class="reto">Tu invento ahora tiene <b>tres zonas</b>: <b>activa</b> (menos de ${m.lim} cm), <b>precaución</b> (de ${m.lim} a ${m.lim+m.band} cm) y <b>libre</b> (más de ${m.lim+m.band} cm). Agrega un segundo LED en el <b>pin ${m.led2}</b> que se encienda solo en la zona de precaución.</div>
+<ol><li>Monta el segundo LED con su resistencia de 220 Ω en el pin ${m.led2}.</li><li>Cambia el if-else por <code>if … else if … else</code> para las tres zonas. No hay código base: lo escribes tú.</li><li>Prueba a ${m.lim-3}, ${m.lim+Math.floor(m.band/2)} y ${m.lim+m.band+5} cm. <b>Captura 6:</b> el invento en zona de precaución. <b>Captura 7:</b> tu código.</li><li>Explica en tu documento por qué el orden de las condiciones importa.</li></ol>
+<p>Así se escribe una decisión de tres caminos. <span class="ex">Es un ejemplo con otra situación (temperatura); no lo copies, úsalo como molde.</span></p>
+${cb(`if (temperatura > 35) {\n  // caso 1: muy caliente\n} else if (temperatura > 25) {\n  // caso 2: tibio\n} else {\n  // caso 3: frío\n}`,'c4')}
+<p class="ex">Pista: la primera condición revisa la zona más cercana. Si la pones de última, ¿qué pasa?</p>`;
+  const sust=`<h2>Sustentación con el profe</h2><p class="small">5 minutos por persona · solo ruta 4</p>
+<div class="reto">Cuando termines, levanta la mano. El profe se sienta contigo frente a tu simulación de Tinkercad. <b>Cada integrante sustenta por separado</b>, aunque hayan trabajado en pareja.</div>
+<ol><li>Te hará <b>2 de estas preguntas</b> sobre tu propio código:<ol>${m.sq.map(q=>`<li>${q}</li>`).join('')}</ol></li><li>Te pedirá un <b>cambio en vivo</b>: ${m.live}.</li><li>Lo que cuenta es que expliques con tus palabras. Si usaste IA o copiaste una parte y no la entiendes, dilo: es mejor que inventar.</li></ol><div class="reto" style="border-left-color:#c0392b"><b>Regla de la ruta 4:</b> la recuperación solo se aprueba si tu documento está completo, tu reto extra funciona en la simulación y explicas tu propio código en la sustentación. Si falla cualquiera de las tres, tus notas se quedan como están, aunque hayas entregado todo lo demás.</div>`;
+  const steps=[{t:Q[0],h:L[0],q:0},{t:Q[1],h:L[1],q:1}];
+  if(m.ru>=2)steps.push({t:Q[2],h:L[2],q:2});
+  if(m.ru===3)steps.push({t:Q[3],h:L[3]});
+  if(m.ru>=4){steps.push({t:'Reto extra',h:extra});steps.push({t:'Sustentación',h:sust})}
+  const items=['Primera línea del documento: código de misión '+m.code+', nombres y enlace de su diseño de Tinkercad (botón Compartir → Copiar enlace)','Capturas 1 y 2 y respuestas del nivel 1','Capturas 3 y 4, tabla de ángulos y respuestas del nivel 2'];
+  if(m.ru>=2)items.push('Captura 5, tabla de pruebas y cadena del invento');
+  if(m.ru===3)items.push('Las 3 respuestas del análisis');
+  if(m.ru>=4)items.push('Capturas 6 y 7 y explicación del reto extra','Sustentación hecha con el profe (él la marca)');
+  items.push('Cada integrante sube el documento en su propia cuenta de Classroom');
+  steps.push({t:'Entrega',h:`<h2>Entrega en Classroom</h2><div class="reto">Tu ruta ${m.ru} tiene ${steps.length} partes antes de esta. Revisa que tu documento tenga todo antes de subirlo.</div><ul class="check">${items.map(x=>`<li><label><input type="checkbox" style="width:auto;margin-right:8px">${x}</label></li>`).join('')}</ul>`});
+  return steps;
+}
+let M=null,state={u:1,st:[0,0,0]},cur=0;
+const save=()=>{try{localStorage.setItem('mis83-'+M.code,JSON.stringify(state))}catch(e){}};
+const load=()=>{try{const v=JSON.parse(localStorage.getItem('mis83-'+M.code));if(v&&v.st)state=v}catch(e){}};
+
+let P=[];
+function renderTabs(){$('#tabs').innerHTML=P.map((s,i)=>`<button type="button" role="tab" aria-selected="${i===cur}" data-i="${i}" ${i>=state.u?'disabled':''}>${s.t}${s.q!==undefined&&state.st[s.q]?' '+'★'.repeat(state.st[s.q]):''}</button>`).join('')}
+function renderLevel(){
+  const S=P[cur]; let q='';
+  if(S.q!==undefined){const Q=quizzes(M)[S.q],r=rng(Date.now());
+    q=`<div class="quiz"><h3>Comprobación rápida para desbloquear lo que sigue</h3><p class="small">Necesitas 2 de 3 correctas. Puedes repetir.</p>${Q.map((x,i)=>{const idx=shuffle(r,x.o.map((_,j)=>j));return `<div class="q"><b>${i+1}. ${x.q}</b><div class="opts" data-q="${i}">${idx.map(j=>`<button type="button" data-j="${j}">${x.o[j]}</button>`).join('')}</div></div>`}).join('')}<button type="button" id="chk">Comprobar</button><div class="msg" id="qmsg"></div></div>`}
+  else if(cur<P.length-1)q=`<div class="quiz"><button type="button" id="done">Ya lo terminé: abrir lo que sigue</button></div>`;
+  $('#lvl').innerHTML=`<div class="lvl">${S.h}${q}</div>`;
+}
+function show(i){cur=i;renderTabs();renderLevel()}
+function start(a,b,ru,gr){M=mission(a,b,ru,gr);P=plan(M);state={u:1,st:[0,0,0]};load();
+  $('#mcode').textContent=M.code;$('#mroute').textContent='Grupo '+M.gr[0]+'-'+M.gr[1]+' · Ruta '+M.ru+' · '+['niveles 1 y 2','niveles 1 a 3','niveles 1 a 3 y análisis','niveles 1 a 3, reto extra y sustentación'][M.ru-1];$('#mtitle').textContent='Misión: '+M.inv.replace(/^(una|un|la|el) /,'');
+  $('#msum').innerHTML=summary(M);$('#mline').textContent=M.code+' · nombres · enlace de Tinkercad';$('#board').innerHTML=boardSVG(M);
+  $('#app').classList.remove('hidden');try{localStorage.setItem('mis83-names',JSON.stringify([a,b,ru,gr]))}catch(e){}
+  show(Math.min(state.u-1,P.length-1));$('#app').scrollIntoView({behavior:'smooth'});}
+
+$('#start').addEventListener('submit',e=>{e.preventDefault();const a=$('#n1').value.trim();if(a.split(' ').length<2){$('#n1').setCustomValidity('Escribe nombre y apellido');$('#n1').reportValidity();return}$('#n1').setCustomValidity('');if(!$('#gr').value){$('#gr').reportValidity();return}if(!$('#ru').value){$('#ru').reportValidity();return}start(a,$('#n2').value.trim(),$('#ru').value,$('#gr').value)});
+$('#n1').addEventListener('input',()=>$('#n1').setCustomValidity(''));
+$('#tabs').addEventListener('click',e=>{const b=e.target.closest('button');if(b&&!b.disabled)show(+b.dataset.i)});
+$('#lvl').addEventListener('click',e=>{
+  const b=e.target.closest('button');if(!b)return;
+  if(b.classList.contains('cp')){const t=$('#'+b.dataset.t).textContent;navigator.clipboard.writeText(t).then(()=>{b.textContent='Copiado'},()=>{const r=document.createRange();r.selectNodeContents($('#'+b.dataset.t));const s=getSelection();s.removeAllRanges();s.addRange(r);b.textContent='Ctrl+C'});return}
+  const o=b.closest('.opts');if(o){o.querySelectorAll('button').forEach(x=>x.classList.remove('sel','ok','no'));b.classList.add('sel');return}
+  if(b.id==='done'){state.u=Math.max(state.u,cur+2);save();renderTabs();b.textContent='Listo, ya puedes abrir la siguiente pestaña';return}
+  if(b.id==='chk'){const qi=P[cur].q,Q=quizzes(M)[qi];let ok=0,all=true;
+    document.querySelectorAll('#lvl .opts').forEach(o=>{const s=o.querySelector('.sel');if(!s){all=false;return}const good=+s.dataset.j===Q[+o.dataset.q].c;s.classList.add(good?'ok':'no');ok+=good});
+    if(!all){$('#qmsg').textContent='Responde las 3 preguntas.';return}
+    if(ok>=2){state.st[qi]=Math.max(state.st[qi],ok);state.u=Math.max(state.u,cur+2);save();$('#qmsg').innerHTML=`<span class="stars">${'★'.repeat(ok)}</span> ¡Desbloqueado! Pasa a lo que sigue cuando tengas tus capturas.`;renderTabs()}
+    else $('#qmsg').textContent=`${ok} de 3. Repasa tu reto y vuelve a intentarlo.`}
+});
+$('#tform').addEventListener('submit',e=>{e.preventDefault();const a=$('#t1').value.trim();if(!a)return;const m=mission(a,$('#t2').value.trim(),$('#tr').value,$('#tg').value),s=m.s;
+  $('#tout').innerHTML=`<p><b>Código esperado:</b> <span class="code" style="font-size:22px">${m.code}</span></p>${summary(m)}
+  <table style="margin-top:10px"><tr><th>Nivel 1</th><td>${s.f} Condición <code>${s.v} ${s.op} ${s.k}</code>; con ${s.on} enciende, con ${s.off} apaga; con ${s.k} ${litAt(s,s.k)?'enciende':'apaga'}.</td></tr>
+  <tr><th>Nivel 2</th><td>${m.angs.map(a=>a+'° ≈ '+pw(a)+' ms').join(' · ')} · delay ${m.dly} ms</td></tr>
+  <tr><th>Nivel 3</th><td>Reposo ${m.rest}°, activo ${m.act}° con distancia &lt; ${m.lim} cm; pruebas a ${m.lim-5}, ${m.lim} y ${m.lim+10} cm (a ${m.lim} cm el simulador suele leer ${m.lim-1} por el redondeo y puede activarse; vale cualquiera de los dos resultados si lo explica). LED ${m.ledInv?'encendido en reposo, apagado al activarse':'apagado en reposo, encendido al activarse'}. Servo ${m.servo}, LED ${m.led}, Trig ${m.trig}, Echo ${m.echo}.</td></tr>
+  ${m.ru===3?`<tr><th>Análisis</th><td><ol>${m.aq.map(q=>`<li>${q}</li>`).join('')}</ol></td></tr>`:''}
+  ${m.ru>=4?`<tr><th>Reto extra</th><td>LED 2 en pin ${m.led2}; precaución entre ${m.lim} y ${m.lim+m.band} cm; if / else if / else con la zona más cercana primero.</td></tr><tr><th>Sustentación</th><td>Preguntas (elija 2):<ol>${m.sq.map(q=>`<li>${q}</li>`).join('')}</ol>Cambio en vivo: ${m.live}.<br><b>Aprueba solo si cumple las tres condiciones:</b> documento completo con su código de misión, reto extra funcionando en la simulación y sustentación en la que explica su propio código. Si falla una, no se aprueba la recuperación y las notas quedan como están.<br><b>Si aprueba:</b> Básico si explica lo mínimo con ayuda; Alto si explica su código con sus palabras; Superior si además hace el cambio en vivo sin ayuda.</td></tr>`:''}
+  <tr><th>Partes de la ruta ${m.ru}</th><td>${['Niveles 1 y 2','Niveles 1 a 3','Niveles 1 a 3 y análisis','Niveles 1 a 3, reto extra y sustentación'][m.ru-1]}</td></tr></table>`;gradeForm(m,[a,$('#t2').value.trim()].filter(Boolean))});
+function parts(m){const p=['Nivel 1: capturas 1-2 y respuestas','Nivel 2: capturas 3-4, tabla de ángulos y respuestas'];if(m.ru>=2)p.push('Nivel 3: captura 5, tabla de pruebas y cadena');if(m.ru===3)p.push('Análisis: 3 respuestas');if(m.ru>=4)p.push('Reto extra funcionando (capturas 6-7)');return p}
+let G=null;
+function gradeForm(m,names){G={m,names};const P=parts(m);
+  $('#grade').innerHTML=`<div class="lvl"><h3>Calificar esta entrega</h3>
+  <label><input type="checkbox" id="gcode" style="width:auto;margin-right:8px">El documento tiene el código ${m.code} y los valores de esta misión</label>
+  <p class="small" style="margin:10px 0 4px">Partes entregadas:</p>${P.map((x,i)=>`<label><input type="checkbox" class="gp" data-i="${i}" style="width:auto;margin-right:8px">${x}</label>`).join('')}
+  <label for="gq" style="margin-top:10px">Respuestas</label><select id="gq"><option value="3">Propias, explican el porqué</option><option value="2" selected>Propias pero cortas</option><option value="0">Copiadas o iguales a otra entrega</option></select>
+  ${m.ru>=4?names.map((n,i)=>`<label for="gs${i}" style="margin-top:10px">Sustentación de ${n}</label><select id="gs${i}"><option value="0">No explica su código</option><option value="1">Explica lo mínimo, con ayuda</option><option value="2" selected>Explica su código con sus palabras</option><option value="3">Explica y hace el cambio en vivo sin ayuda</option></select>`).join(''):''}
+  <div style="margin-top:12px"><button type="button" id="gadd">Agregar a la lista</button></div></div>`}
+const LV=['Bajo','Básico','Alto','Superior'];
+const RT=['niveles 1 y 2','niveles 1 a 3','niveles 1 a 3 y análisis','niveles 1 a 3, reto extra y sustentación'];
+function gradeOne(i){const m=G.m,P=parts(m),code=$('#gcode').checked,got=[...document.querySelectorAll('.gp')].filter(x=>x.checked).length,miss=P.length-got,q=+$('#gq').value;
+  let lv,why;
+  if(!code){lv=0;why='el documento no tiene su código de misión o no corresponde a su misión'}
+  else if(q===0){lv=0;why='las respuestas son copiadas o iguales a otra entrega'}
+  else if(m.ru>=4){const s=+$('#gs'+i).value;
+    if(miss>0){lv=0;why=`faltó ${miss} parte(s) de la ruta y la ruta 4 exige todo completo`}
+    else if(s===0){lv=0;why='no logró explicar su propio código en la sustentación'}
+    else{lv=s;why=['','explicó lo mínimo con ayuda en la sustentación','explicó su código con sus palabras en la sustentación','explicó su código y resolvió el cambio en vivo sin ayuda'][s]}}
+  else if(miss===0){lv=q===3?3:2;why=q===3?'entregó todas las partes con respuestas propias que explican el porqué':'entregó todas las partes; algunas respuestas son cortas'}
+  else if(miss===1){lv=1;why='faltó una parte de la ruta'}
+  else{lv=0;why=`faltaron ${miss} partes de la ruta`}
+  const ok=lv>0;
+  return {n:G.names[i],g:m.gr,c:m.code,lv:LV[lv],r:`Recuperación ruta ${m.ru} (${RT[m.ru-1]}), misión ${m.code}: ${ok?'aprobada':'no aprobada'}; ${why}.${ok?'':' Las notas del período quedan como estaban.'}`}}
+let L=[];try{L=JSON.parse(localStorage.getItem('mis-notas'))||[]}catch(e){}
+function renderL(){$('#ltab').innerHTML=`<thead><tr><th>Estudiante</th><th>Grupo</th><th>Nivel</th><th>Retroalimentación</th><th></th></tr></thead><tbody>${L.map((x,i)=>`<tr><td>${x.n}</td><td>${x.g[0]}-${x.g[1]}</td><td><b>${x.lv}</b></td><td>${x.r}</td><td><button type="button" class="ghost" data-del="${i}" style="min-height:34px;padding:4px 10px">Quitar</button></td></tr>`).join('')}</tbody>`;try{localStorage.setItem('mis-notas',JSON.stringify(L))}catch(e){}}
+renderL();
+let DB=null;const rid=x=>norm(x.n).replace(/ /g,'-')+'-'+x.g;
+const st=m=>{$('#lsave').textContent=m};
+async function put(r){if(DB){try{await DB.collection('notas').doc(rid(r)).set(r);return}catch(e){st('No se pudo guardar en la nube; quedó en este navegador. Copie la lista al Calificador.')}}}
+async function del(r){if(DB){try{await DB.collection('notas').doc(rid(r)).delete()}catch(e){}}}
+st('Guardada en este navegador. Cópiela al Calificador antes de cambiar de computador.');
+if(window.claude&&window.claude.use){window.claude.use('db').then(d=>{if(!d)return;DB=d;let first=true;
+  const tm=setTimeout(()=>st('La nube no responde todavía; por ahora la lista queda en este navegador.'),10000);
+  DB.collection('notas').onSnapshot(async s=>{if(!s.metadata.fromCache)clearTimeout(tm);
+    const cloud=s.docs.map(x=>x.data());
+    if(first){first=false;const miss=L.filter(r=>!cloud.some(c=>rid(c)===rid(r)));for(const r of miss)await put(r);if(miss.length)return}
+    L=cloud.slice().sort((a,b)=>(a.g+a.n).localeCompare(b.g+b.n));renderL();
+    st('Guardada en la nube de esta página: la ve desde cualquier computador donde abra la página con su cuenta. Solo usted puede verla.')},
+   e=>{clearTimeout(tm);DB=null;st('No se pudo usar la nube; la lista queda en este navegador. Cópiela al Calificador.')});
+}).catch(()=>{})}
+$('#teacher').addEventListener('click',async e=>{const b=e.target.closest('button');if(!b)return;
+  if(b.id==='gadd'&&G){const rows=G.names.map((_,i)=>gradeOne(i));for(const r of rows){L=L.filter(x=>rid(x)!==rid(r));L.push(r)}renderL();for(const r of rows)await put(r);$('#grade').innerHTML='<p class="msg">Agregado. Escriba el siguiente estudiante arriba.</p>';$('#t1').value='';$('#t2').value='';$('#tout').innerHTML='';$('#t1').focus()}
+  if(b.dataset.del!==undefined){const r=L.splice(+b.dataset.del,1)[0];renderL();await del(r)}
+  if(b.id==='lclear'){if(b.dataset.sure){const old=L;L=[];renderL();b.textContent='Borrar lista';delete b.dataset.sure;for(const r of old)await del(r)}else{b.dataset.sure=1;b.textContent='¿Seguro? Toque otra vez'}}
+  if(b.id==='lcopy'){const txt=L.map(x=>[x.n,x.g[0]+'-'+x.g[1],x.lv,x.r].join('\t')).join('\n');navigator.clipboard.writeText(txt).then(()=>{$('#lmsg').textContent=L.length+' filas copiadas: péguelas en la hoja (Estudiante, Grupo, Nivel, Retroalimentación).'},()=>{$('#lmsg').textContent='No se pudo copiar; seleccione la tabla y use Ctrl+C.'})}
+});
+try{const v=JSON.parse(localStorage.getItem('mis83-names'));if(v){$('#n1').value=v[0]||'';$('#n2').value=v[1]||'';$('#ru').value=v[2]||'';$('#gr').value=v[3]||''}}catch(e){}
+}
+</script>
+</body>
+</html>
